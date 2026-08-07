@@ -1,0 +1,7 @@
+name: smoke
+on: [push]
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo hi && df -h / | tail -1
