@@ -1,0 +1,47 @@
+name: build-oneui9
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["beyondx-s10"]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 600
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: beyondx-s10
+
+      - name: Init build submodules
+        run: git submodule update --init --recursive --depth 1
+
+      - name: Install deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq attr ccache clang git golang libbrotli-dev libgtest-dev \
+            liblz4-dev libpcre2-dev libprotobuf-dev libunwind-dev libusb-1.0-0-dev libzstd-dev \
+            lld openjdk-21-jdk protobuf-compiler zip zipalign make cmake npm lz4 brotli patchelf \
+            curl webp
+
+      - name: Build (make_rom)
+        id: rom
+        run: |
+          source ./buildenv.sh beyondx
+          run_cmd make_rom
+
+      - name: Build flashable zip (make_rom -z)
+        run: |
+          source ./buildenv.sh beyondx
+          run_cmd make_rom -z
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: UN1CA-rom
+          path: |
+            out/*.zip
+            out/UN1CA*
+        if-no-files-found: error
